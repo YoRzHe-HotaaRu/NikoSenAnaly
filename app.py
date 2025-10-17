@@ -80,7 +80,7 @@ def get_ai_analysis(sentiment_counts, game_data, avg_polarity):
                 "Content-Type": "application/json",
             },
             data=json.dumps({
-                "model": "x-ai/grok-4-fast", # You can change the model
+                "model": "z-ai/glm-4.6", # You can change the model
                 "messages": [{"role": "user", "content": prompt}],
             })
         )
