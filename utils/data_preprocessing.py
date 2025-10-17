@@ -5,17 +5,35 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-def preprocess_data(file_path):
-    # Load Excel file
-    df = pd.read_excel(file_path)
+# --- CONFIGURATION ---
+# Set these to the exact names of the columns in your Excel files.
+REVIEW_COLUMN_NAME = 'user_review'  # The column with the review text from reviews.xlsx
+GAME_TITLE_COLUMN = 'title'         # The column with the game title (in both files)
+# ---------------------
+
+def preprocess_data(df):
+    # The dataframe is already merged in app.py, so we just process it here.
     
+    # Print the columns to the console for debugging
+    print("Columns found after merge:", df.columns.tolist())
+    
+    # Check if the required columns exist
+    if REVIEW_COLUMN_NAME not in df.columns:
+        raise ValueError(f"Column '{REVIEW_COLUMN_NAME}' not found in the merged data.")
+    if GAME_TITLE_COLUMN not in df.columns:
+        raise ValueError(f"Column '{GAME_TITLE_COLUMN}' not found in the merged data.")
+        
     # Basic preprocessing
-    # Assuming your review text is in a column named 'review'
-    df['cleaned_review'] = df['review'].apply(clean_text)
+    # Ensure all review text is string and handle missing values
+    df['cleaned_review'] = df[REVIEW_COLUMN_NAME].fillna('').astype(str).apply(clean_text)
     
     return df
 
 def clean_text(text):
+    # Handle potential non-string data (though we've converted to string above)
+    if not isinstance(text, str):
+        text = str(text)
+        
     # Convert to lowercase
     text = text.lower()
     

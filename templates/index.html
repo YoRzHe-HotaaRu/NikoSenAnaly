@@ -8,6 +8,103 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.0?plugins=typography"></script>
+
+
+    <style>
+        /* Custom styles for the AI Analysis section */
+        .prose {
+            color: #374151; /* gray-700 */
+            max-width: none;
+        }
+
+        .prose h2 {
+            color: #1e40af; /* blue-800 */
+            font-weight: 700;
+            border-bottom: 2px solid #e5e7eb; /* gray-200 */
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .prose h3 {
+            color: #1e3a8a; /* blue-900 */
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .prose strong {
+            color: #111827; /* gray-900 */
+            font-weight: 600;
+        }
+
+        /* --- Table Styling --- */
+        .prose table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.875rem; /* text-sm */
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .prose thead {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+        }
+
+        .prose th {
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .prose td {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid #e5e7eb; /* gray-200 */
+        }
+
+        .prose tbody tr:nth-child(even) {
+            background-color: #f9fafb; /* gray-50 */
+        }
+
+        .prose tbody tr:hover {
+            background-color: #dbeafe; /* blue-100 */
+        }
+
+        /* --- List Styling --- */
+        .prose ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .prose ul > li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .prose ul > li::before {
+            content: "•";
+            color: #3b82f6; /* blue-500 */
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1.5em;
+            position: absolute;
+            left: 1rem;
+        }
+
+        
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen" x-data="sentimentApp()">
     <header class="bg-blue-600 text-white p-4 shadow-md">
@@ -21,29 +118,57 @@
         <!-- Upload Section -->
         <section class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Upload Data</h2>
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    accept=".xlsx,.xls" 
-                    class="hidden"
-                    @change="handleFileUpload($event)"
-                >
-                <label for="fileInput" class="cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p class="text-lg text-gray-600">Click to upload or drag and drop</p>
-                    <p class="text-sm text-gray-500 mt-1">Excel files (.xlsx, .xls)</p>
-                </label>
-            </div>
+            <p class="text-gray-600 mb-4">Please upload both the game overview file and the reviews file.</p>
             
-            <div x-show="uploading" class="mt-4">
-                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4">
-                    <p>Processing your data...</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Game Overview File Upload -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input 
+                        type="file" 
+                        id="overviewFileInput" 
+                        accept=".xlsx,.xls" 
+                        class="hidden"
+                        @change="handleFileUpload($event, 'overview')"
+                    >
+                    <label for="overviewFileInput" class="cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p class="text-lg text-gray-600">Game Overview File</p>
+                        <p class="text-sm text-gray-500 mt-1" x-text="overviewFile ? overviewFile.name : 'Click to upload game_overview.xlsx'"></p>
+                    </label>
+                </div>
+
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input 
+                        type="file" 
+                        id="reviewsFileInput" 
+                        accept=".xlsx,.xls" 
+                        class="hidden"
+                        @change="handleFileUpload($event, 'reviews')"
+                    >
+                    <label for="reviewsFileInput" class="cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                        <p class="text-lg text-gray-600">Reviews File</p>
+                        <p class="text-sm text-gray-500 mt-1" x-text="reviewsFile ? reviewsFile.name : 'Click to upload reviews.xlsx'"></p>
+                    </label>
                 </div>
             </div>
-            
+
+            <div class="mt-4 text-center">
+                <button 
+                    @click="processFiles()" 
+                    :disabled="!overviewFile || !reviewsFile || uploading"
+                    class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    <span x-show="!uploading">Analyze Sentiment</span>
+                    <span x-show="uploading">Processing...</span>
+                </button>
+            </div>
+
+            <!-- Error Display -->
             <div x-show="error" class="mt-4">
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
                     <p x-text="error"></p>
@@ -103,14 +228,45 @@
                 </div>
             </div>
         </section>
+
+        <!-- AI Analysis Section -->
+        <section x-show="results" class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">AI-Powered Analysis & Overview</h2>
+            
+            <div class="text-center mb-4">
+                <button 
+                    @click="getAIAnalysis()" 
+                    :disabled="aiLoading || !results"
+                    class="bg-purple-600 text-white font-bold py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    <span x-show="!aiLoading">Generate AI Analysis</span>
+                    <span x-show="aiLoading">Analyzing...</span>
+                </button>
+            </div>
+
+            <div x-show="aiError" class="mt-4">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+                    <p x-text="aiError"></p>
+                </div>
+            </div>
+
+            <div x-show="aiAnalysis" class="mt-4 p-4 bg-gray-50 rounded-lg prose prose-sm max-w-none">
+                <h3 class="text-lg font-medium mb-2">AI Insights</h3>
+                <!-- We will render the parsed Markdown here -->
+                <div x-html="aiAnalysisHtml"></div>
+            </div>
+        </section>
     </main>
 
     <script>
         function sentimentApp() {
             return {
+                // --- FIX: Initialize all variables to prevent "ReferenceError" ---
                 uploading: false,
                 error: null,
                 results: false,
+                overviewFile: null,
+                reviewsFile: null,
                 totalReviews: 0,
                 avgPolarity: 0,
                 avgSubjectivity: 0,
@@ -118,18 +274,38 @@
                 gameData: null,
                 sentimentChart: null,
                 gameChart: null,
-                
-                handleFileUpload(event) {
+                sentimentCounts: null, 
+                aiLoading: false,
+                aiError: null,
+                aiAnalysis: null,
+                aiAnalysisHtml: null,
+                // ---------------------------------------------------------
+            
+                handleFileUpload(event, type) {
                     const file = event.target.files[0];
-                    if (!file) return;
-                    
+                    if (type === 'overview') {
+                        this.overviewFile = file;
+                    } else {
+                        this.reviewsFile = file;
+                    }
+                    this.error = null;
+                    this.results = false;
+                },
+            
+                processFiles() {
+                    if (!this.overviewFile || !this.reviewsFile) {
+                        this.error = 'Please upload both files.';
+                        return;
+                    }
+
                     this.uploading = true;
                     this.error = null;
                     this.results = false;
-                    
+                
                     const formData = new FormData();
-                    formData.append('file', file);
-                    
+                    formData.append('overview_file', this.overviewFile);
+                    formData.append('reviews_file', this.reviewsFile);
+                
                     fetch('/upload', {
                         method: 'POST',
                         body: formData
@@ -139,14 +315,18 @@
                         if (data.error) {
                             this.error = data.error;
                         } else {
+                            // --- FIX: Store the data on the component instance ---
                             this.totalReviews = data.total_reviews;
                             this.avgPolarity = data.avg_polarity;
                             this.avgSubjectivity = data.avg_subjectivity;
                             this.plotPaths = data.plot_paths;
                             this.gameData = data.game_data;
                             this.results = true;
+
+                            // Store the sentiment counts for the AI analysis
+                            this.sentimentCounts = data.sentiment_counts;
+                            // -------------------------------------------------
                             
-                            // Create charts after data is loaded
                             this.$nextTick(() => {
                                 this.createSentimentChart(data.sentiment_counts);
                                 if (data.game_data) {
@@ -155,8 +335,9 @@
                             });
                         }
                     })
+                    //
                     .catch(error => {
-                        this.error = 'An error occurred while processing your file.';
+                        this.error = 'An error occurred while processing your files.';
                         console.error('Error:', error);
                     })
                     .finally(() => {
@@ -167,7 +348,6 @@
                 createSentimentChart(sentimentCounts) {
                     const ctx = document.getElementById('sentimentChart').getContext('2d');
                     
-                    // Destroy existing chart if it exists
                     if (this.sentimentChart) {
                         this.sentimentChart.destroy();
                     }
@@ -205,82 +385,124 @@
                         }
                     });
                 },
+
+                getAIAnalysis() {
+                    this.aiLoading = true;
+                    this.aiError = null;
+                    this.aiAnalysis = null;
+                    this.aiAnalysisHtml = null;
+
+                    fetch('/get_ai_analysis', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sentiment_counts: this.sentimentCounts, // Keep this
+                            game_data: this.gameData,             // Keep this
+                            avg_polarity: this.avgPolarity         // Keep this
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            this.aiError = data.error;
+                        } else {
+                            // Store the raw Markdown (optional)
+                            this.aiAnalysis = data.analysis;
+                            // Parse the Markdown to HTML and store it
+                            this.aiAnalysisHtml = marked.parse(data.analysis)
+                        }
+                    })
+                    .catch(error => {
+                        this.aiError = 'An error occurred while fetching the AI analysis.';
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        this.aiLoading = false;
+                    });
+                },
                 
                 createGameChart(gameData) {
-                    const ctx = document.getElementById('gameChart').getContext('2d');
-                    
-                    // Destroy existing chart if it exists
-                    if (this.gameChart) {
-                        this.gameChart.destroy();
-                    }
-                    
-                    // Prepare data for Chart.js
-                    const games = Object.keys(gameData);
-                    const positiveData = games.map(game => gameData[game].positive || 0);
-                    const negativeData = games.map(game => gameData[game].negative || 0);
-                    const neutralData = games.map(game => gameData[game].neutral || 0);
-                    
-                    this.gameChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: games,
-                            datasets: [
-                                {
-                                    label: 'Positive',
-                                    data: positiveData,
-                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    borderWidth: 1
-                                },
-                                {
-                                    label: 'Negative',
-                                    data: negativeData,
-                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                                    borderColor: 'rgba(255, 99, 132, 1)',
-                                    borderWidth: 1
-                                },
-                                {
-                                    label: 'Neutral',
-                                    data: neutralData,
-                                    backgroundColor: 'rgba(201, 203, 207, 0.6)',
-                                    borderColor: 'rgba(201, 203, 207, 1)',
-                                    borderWidth: 1
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                x: {
-                                    stacked: true
-                                },
-                                y: {
-                                    stacked: true,
-                                    beginAtZero: true,
-                                    max: 1,
-                                    ticks: {
-                                        callback: function(value) {
-                                            return (value * 100).toFixed(0) + '%';
-                                        }
+                const ctx = document.getElementById('gameChart').getContext('2d');
+                
+                if (this.gameChart) {
+                    this.gameChart.destroy();
+                }
+
+                
+                
+                // --- FIX: Correctly parse the data structure from the backend ---
+                // Get the list of game titles from the keys of the 'positive' sentiment data
+                const games = Object.keys(gameData.positive || {});
+                
+                // Map over the game titles to get the corresponding sentiment values
+                const positiveData = games.map(game => gameData.positive[game] || 0);
+                const negativeData = games.map(game => gameData.negative[game] || 0);
+                const neutralData = games.map(game => gameData.neutral[game] || 0);
+                // ------------------------------------------------------------
+                
+                this.gameChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: games, // Now correctly uses the game titles as labels
+                        datasets: [
+                            {
+                                label: 'Positive',
+                                data: positiveData,
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Negative',
+                                data: negativeData,
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Neutral',
+                                data: neutralData,
+                                backgroundColor: 'rgba(201, 203, 207, 0.6)',
+                                borderColor: 'rgba(201, 203, 207, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                stacked: true
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 1,
+                                ticks: {
+                                    callback: function(value) {
+                                        return (value * 100).toFixed(0) + '%';
                                     }
                                 }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Sentiment by Game'
                             },
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Sentiment by Game'
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return context.dataset.label + ': ' + (context.raw * 100).toFixed(1) + '%';
-                                        }
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + (context.raw * 100).toFixed(1) + '%';
                                     }
                                 }
                             }
                         }
-                    });
-                }
+                    }
+                });
+            }
             }
         }
     </script>
