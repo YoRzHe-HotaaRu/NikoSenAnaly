@@ -1,0 +1,288 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Review Sentiment Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen" x-data="sentimentApp()">
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold">Evaluating Players Satisfaction via Game Reviews</h1>
+            <p class="mt-2">Upload your game review data to analyze sentiment</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4">
+        <!-- Upload Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Upload Data</h2>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept=".xlsx,.xls" 
+                    class="hidden"
+                    @change="handleFileUpload($event)"
+                >
+                <label for="fileInput" class="cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="text-lg text-gray-600">Click to upload or drag and drop</p>
+                    <p class="text-sm text-gray-500 mt-1">Excel files (.xlsx, .xls)</p>
+                </label>
+            </div>
+            
+            <div x-show="uploading" class="mt-4">
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4">
+                    <p>Processing your data...</p>
+                </div>
+            </div>
+            
+            <div x-show="error" class="mt-4">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+                    <p x-text="error"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section x-show="results" class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-4">Analysis Results</h2>
+            
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-blue-800">Total Reviews</h3>
+                    <p class="text-2xl font-bold text-blue-600" x-text="totalReviews"></p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-green-800">Average Polarity</h3>
+                    <p class="text-2xl font-bold text-green-600" x-text="avgPolarity.toFixed(2)"></p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-purple-800">Average Subjectivity</h3>
+                    <p class="text-2xl font-bold text-purple-600" x-text="avgSubjectivity.toFixed(2)"></p>
+                </div>
+            </div>
+            
+            <!-- Sentiment Distribution -->
+            <div class="mb-6">
+                <h3 class="text-xl font-medium mb-3">Sentiment Distribution</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                    <div>
+                        <img :src="plotPaths.sentiment_distribution" alt="Sentiment Distribution" class="w-full h-auto rounded-lg">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Polarity Distribution -->
+            <div class="mb-6">
+                <h3 class="text-xl font-medium mb-3">Polarity Distribution</h3>
+                <img :src="plotPaths.polarity_distribution" alt="Polarity Distribution" class="w-full h-auto rounded-lg">
+            </div>
+            
+            <!-- Game-specific Analysis -->
+            <div x-show="gameData" class="mb-6">
+                <h3 class="text-xl font-medium mb-3">Sentiment by Game</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <canvas id="gameChart"></canvas>
+                    </div>
+                    <div>
+                        <img :src="plotPaths.sentiment_by_game" alt="Sentiment by Game" class="w-full h-auto rounded-lg">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function sentimentApp() {
+            return {
+                uploading: false,
+                error: null,
+                results: false,
+                totalReviews: 0,
+                avgPolarity: 0,
+                avgSubjectivity: 0,
+                plotPaths: {},
+                gameData: null,
+                sentimentChart: null,
+                gameChart: null,
+                
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    this.uploading = true;
+                    this.error = null;
+                    this.results = false;
+                    
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            this.error = data.error;
+                        } else {
+                            this.totalReviews = data.total_reviews;
+                            this.avgPolarity = data.avg_polarity;
+                            this.avgSubjectivity = data.avg_subjectivity;
+                            this.plotPaths = data.plot_paths;
+                            this.gameData = data.game_data;
+                            this.results = true;
+                            
+                            // Create charts after data is loaded
+                            this.$nextTick(() => {
+                                this.createSentimentChart(data.sentiment_counts);
+                                if (data.game_data) {
+                                    this.createGameChart(data.game_data);
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        this.error = 'An error occurred while processing your file.';
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        this.uploading = false;
+                    });
+                },
+                
+                createSentimentChart(sentimentCounts) {
+                    const ctx = document.getElementById('sentimentChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (this.sentimentChart) {
+                        this.sentimentChart.destroy();
+                    }
+                    
+                    this.sentimentChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(sentimentCounts),
+                            datasets: [{
+                                data: Object.values(sentimentCounts),
+                                backgroundColor: [
+                                    'rgba(75, 192, 192, 0.6)',  // Positive - green
+                                    'rgba(255, 99, 132, 0.6)',   // Negative - red
+                                    'rgba(201, 203, 207, 0.6)'   // Neutral - gray
+                                ],
+                                borderColor: [
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(201, 203, 207, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment Distribution'
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createGameChart(gameData) {
+                    const ctx = document.getElementById('gameChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (this.gameChart) {
+                        this.gameChart.destroy();
+                    }
+                    
+                    // Prepare data for Chart.js
+                    const games = Object.keys(gameData);
+                    const positiveData = games.map(game => gameData[game].positive || 0);
+                    const negativeData = games.map(game => gameData[game].negative || 0);
+                    const neutralData = games.map(game => gameData[game].neutral || 0);
+                    
+                    this.gameChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: games,
+                            datasets: [
+                                {
+                                    label: 'Positive',
+                                    data: positiveData,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Negative',
+                                    data: negativeData,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Neutral',
+                                    data: neutralData,
+                                    backgroundColor: 'rgba(201, 203, 207, 0.6)',
+                                    borderColor: 'rgba(201, 203, 207, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    stacked: true
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    max: 1,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return (value * 100).toFixed(0) + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment by Game'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + (context.raw * 100).toFixed(1) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
