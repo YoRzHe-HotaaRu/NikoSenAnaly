@@ -1,8 +1,8 @@
 # requirements.txt
-flask==2.3.3
-pandas==2.0.3
-nltk==3.8.1
-textblob==0.17.1
-matplotlib==3.7.2
-seaborn==0.12.2
-openpyxl==3.1.2
+flask
+pandas
+nltk
+textblob
+matplotlib
+seaborn
+openpyxl

@@ -5,6 +5,10 @@ from utils.data_preprocessing import preprocess_data
 from utils.sentiment_analysis import analyze_sentiment
 from utils.visualization import generate_sentiment_distribution
 import os
+import nltk
+
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 app = Flask(__name__)
 
