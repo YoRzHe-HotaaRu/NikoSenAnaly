@@ -86,6 +86,7 @@ Follow these steps to get a copy of the project up and running on your local mac
 
 ## Project Structure
 game-sentiment-analysis/
+
 ├── app.py # Main Flask application and API routes
 ├── data/ # Directory to store uploaded files
 ├── static/
