@@ -28,7 +28,7 @@ Follow these steps to get a copy of the project up and running on your local mac
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/your-repo-name.git
+    git clone https://github.com/YoRzHe-HotaaRu/NikoSenAnaly
     cd your-repo-name
     ```
 
