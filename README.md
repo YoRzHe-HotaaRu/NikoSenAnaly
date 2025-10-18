@@ -2,7 +2,7 @@
 
 A Flask-based web application that uses sentiment analysis and AI to evaluate player satisfaction from game reviews. The project processes Excel files containing game overviews and user reviews, performs sentiment analysis, visualizes the results, and generates an AI-powered overview of the findings.
 
-![Screenshot of the application](https://i.imgur.com/your-screenshot-link.png) <!-- Optional: Add a screenshot of your app -->
+![Screenshot of the application](image.png) <!-- Optional: Add a screenshot of your app -->
 
 ## Features
 
@@ -28,7 +28,7 @@ Follow these steps to get a copy of the project up and running on your local mac
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/your-repo-name.git
+    git clone https://github.com/YoRzHe-HotaaRu/NikoSenAnaly
     cd your-repo-name
     ```
 
@@ -86,6 +86,7 @@ Follow these steps to get a copy of the project up and running on your local mac
 
 ## Project Structure
 game-sentiment-analysis/
+
 ├── app.py # Main Flask application and API routes
 ├── data/ # Directory to store uploaded files
 ├── static/
